@@ -16,14 +16,12 @@
     {
       "matches": ["https://github.com/notifications*"],
       "js": ["dist/notifications/index.js"],
-      "run_at": "document_idle",
-      "type": "module"
+      "run_at": "document_idle"
     },
     {
       "matches": ["https://github.com/*/*/pull/*"],
       "js": ["dist/pull-request/index.js"],
-      "run_at": "document_idle",
-      "type": "module"
+      "run_at": "document_idle"
     }
   ],
   "host_permissions": ["https://github.com/*"]
