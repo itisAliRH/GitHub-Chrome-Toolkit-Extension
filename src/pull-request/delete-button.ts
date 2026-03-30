@@ -1,12 +1,17 @@
 /** Finds GitHub's native "Delete branch" button in the merge status box. */
 export function findNativeDeleteButton(): HTMLButtonElement | null {
-  // GitHub renders a submit button inside a delete-branch form at the bottom of the PR timeline
-  return (
+  // Legacy GitHub: form-based delete action
+  const legacy =
     document.querySelector<HTMLButtonElement>('form[action*="delete-branch"] button[type="submit"]') ??
-    document.querySelector<HTMLButtonElement>('button[data-ga-click*="delete branch" i]') ??
-    // Fallback: scan all buttons for exact text match
-    Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
-      (b) => b.textContent?.trim() === 'Delete branch',
+    document.querySelector<HTMLButtonElement>('button[data-ga-click*="delete branch" i]');
+  if (legacy) return legacy;
+
+  // New GitHub React UI: button is inside the merge box, identified by text content
+  const mergeBox = document.querySelector('[data-testid="mergebox-partial"]');
+  const scope = mergeBox ?? document;
+  return (
+    Array.from(scope.querySelectorAll<HTMLButtonElement>('button')).find(
+      (b) => b.textContent?.includes('Delete branch'),
     ) ?? null
   );
 }
@@ -48,7 +53,7 @@ export function createDeleteButton(nativeButton: HTMLButtonElement): HTMLButtonE
 /** Inserts btn immediately after the Merged/Closed status badge. */
 export function insertAfterBadge(btn: HTMLButtonElement): void {
   const badge = document.querySelector<HTMLElement>(
-    '.gh-header-meta .State, [class*="State--merged"], [class*="State--closed"]',
+    '.gh-header-meta .State, [class*="State--merged"], [class*="State--closed"], [class*="prc-StateLabel"]',
   );
   if (!badge) return;
   badge.insertAdjacentElement('afterend', btn);
