@@ -1,10 +1,10 @@
 import type { NotificationStatus } from './classifier.js';
 
-export type FilterState = NotificationStatus | 'all';
+export type FilterState = Exclude<NotificationStatus, 'unknown'> | 'all';
 
 interface FilterDef {
   label: string;
-  value: NotificationStatus;
+  value: Exclude<NotificationStatus, 'unknown'>;
   color: string;
   shape: 'circle' | 'hexagon';
 }
