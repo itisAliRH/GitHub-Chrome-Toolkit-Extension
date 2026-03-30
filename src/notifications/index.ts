@@ -1,4 +1,4 @@
-import { classifyAll, ITEM_SELECTOR } from './classifier.js';
+import { classifyAll, classifyItem, ITEM_SELECTOR } from './classifier.js';
 import { createFilterBar } from './filter-bar.js';
 import { openSelected, openAllVisible } from './tabs.js';
 import type { FilterState } from './filter-bar.js';
@@ -11,8 +11,11 @@ const LIST_SELECTOR = [
 ].join(', ');
 
 let listRoot: Element | null = null;
+let observer: MutationObserver | null = null;
 
 async function init(): Promise<void> {
+  observer?.disconnect();
+  observer = null;
   document.getElementById('gh-toolkit-filter-bar')?.remove();
 
   listRoot = await waitForElement(LIST_SELECTOR);
@@ -39,16 +42,19 @@ function applyFilter(filter: FilterState): void {
 }
 
 function setupObserver(root: Element): void {
-  new MutationObserver((mutations) => {
+  observer = new MutationObserver((mutations) => {
     for (const m of mutations) {
       m.addedNodes.forEach((node) => {
         if (!(node instanceof Element)) return;
-        // Classify the new node itself or scan its descendants
-        const target = node.matches(ITEM_SELECTOR) ? (node.parentElement ?? node) : node;
-        classifyAll(target);
+        if (node.matches(ITEM_SELECTOR)) {
+          (node as HTMLElement).dataset.ghToolkitStatus = classifyItem(node);
+        } else {
+          classifyAll(node);
+        }
       });
     }
-  }).observe(root, { childList: true, subtree: true });
+  });
+  observer.observe(root, { childList: true, subtree: true });
 }
 
 init();
