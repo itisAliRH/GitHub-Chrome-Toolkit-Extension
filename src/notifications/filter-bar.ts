@@ -92,7 +92,7 @@ export function createFilterBar(
   label.textContent = 'Filter';
   bar.appendChild(label);
 
-  let active: NotificationStatus | null = null;
+  let active: Exclude<NotificationStatus, 'unknown'> | null = null;
 
   FILTERS.forEach((f) => {
     const btn = makeFilterButton(f);
