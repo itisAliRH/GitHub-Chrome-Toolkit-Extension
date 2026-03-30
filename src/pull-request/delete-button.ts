@@ -42,8 +42,7 @@ export function createDeleteButton(nativeButton: HTMLButtonElement): HTMLButtonE
   btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
 
   btn.addEventListener('click', () => {
-    nativeButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => { nativeButton.click(); }, 300);
+    nativeButton.click();
     btn.remove();
   });
 

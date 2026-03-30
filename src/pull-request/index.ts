@@ -23,8 +23,10 @@ async function init(): Promise<void> {
   const state = detectPRState();
   if (state === 'open' || state === null) return;
 
-  // Wait for the async-loaded merge box (contains the native "Delete branch" button)
+  // Wait for the merge box container, then wait for its inner buttons to load
+  // (GitHub fetches the merge box content via a second async include-fragment request)
   await waitForElement(MERGE_BOX_SELECTOR);
+  await waitForElement(`${MERGE_BOX_SELECTOR} button`);
 
   const nativeBtn = findNativeDeleteButton();
   if (!nativeBtn) return; // branch already deleted or PR not eligible
