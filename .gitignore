@@ -1,0 +1,22 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local env files — never commit secrets
+.env
+.env.local
+*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Internal brainstorming/planning artifacts (not for public consumption)
+docs/superpowers/
+.superpowers/

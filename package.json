@@ -1,0 +1,22 @@
+{
+  "name": "github-chrome-toolkit-extension",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "Filter notifications, open in tabs, and delete branches — right from the page.",
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
+    "chrome-types": "^0.1.425",
+    "jsdom": "^29.0.1",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}
