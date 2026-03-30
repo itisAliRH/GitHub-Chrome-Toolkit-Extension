@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Chrome Toolkit Extension",
+  "version": "1.0.0",
+  "description": "Filter notifications, open in tabs, and delete branches — right from the page.",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "background": {
+    "service_worker": "dist/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/notifications*"],
+      "js": ["dist/notifications/index.js"],
+      "run_at": "document_idle",
+      "type": "module"
+    },
+    {
+      "matches": ["https://github.com/*/*/pull/*"],
+      "js": ["dist/pull-request/index.js"],
+      "run_at": "document_idle",
+      "type": "module"
+    }
+  ],
+  "host_permissions": ["https://github.com/*"]
+}
