@@ -1,12 +1,25 @@
 import type { NotificationStatus } from './classifier.js';
 
-export type FilterState = Exclude<NotificationStatus, 'unknown'> | 'all';
+export type FilterValue = Exclude<NotificationStatus, 'unknown'>;
+export type FilterState = Set<FilterValue>;
+
+export interface FilterBarResult {
+  element: HTMLElement;
+  updateSelectedCount: (n: number) => void;
+}
 
 interface FilterDef {
   label: string;
-  value: Exclude<NotificationStatus, 'unknown'>;
+  value: FilterValue;
   color: string;
   shape: 'circle' | 'hexagon';
+}
+
+interface ComboFilterDef {
+  label: string;
+  values: FilterValue[];
+  colors: string[];
+  shapes: FilterDef['shape'][];
 }
 
 const FILTERS: FilterDef[] = [
@@ -16,9 +29,18 @@ const FILTERS: FilterDef[] = [
   { label: 'Muted',  value: 'muted',  color: '#6e7681', shape: 'circle'  },
 ];
 
+const COMBO_FILTERS: ComboFilterDef[] = [
+  {
+    label: 'Merged+Closed',
+    values: ['merged', 'closed'],
+    colors: ['#a371f7', '#f85149'],
+    shapes: ['hexagon', 'circle'],
+  },
+];
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function makeDotSvg(color: string, shape: FilterDef['shape']): SVGSVGElement {
+function makeShape(color: string, shape: FilterDef['shape']): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('width', '10');
   svg.setAttribute('height', '10');
@@ -46,7 +68,17 @@ function makeFilterButton(f: FilterDef): HTMLButtonElement {
   btn.className = 'gh-tk-btn gh-tk-filter';
   btn.dataset.filter = f.value;
   btn.type = 'button';
-  btn.appendChild(makeDotSvg(f.color, f.shape));
+  btn.appendChild(makeShape(f.color, f.shape));
+  btn.appendChild(document.createTextNode(` ${f.label}`));
+  return btn;
+}
+
+function makeComboButton(f: ComboFilterDef): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.className = 'gh-tk-btn gh-tk-combo';
+  btn.dataset.comboFilter = f.values.join(',');
+  btn.type = 'button';
+  f.colors.forEach((color, i) => btn.appendChild(makeShape(color, f.shapes[i])));
   btn.appendChild(document.createTextNode(` ${f.label}`));
   return btn;
 }
@@ -67,19 +99,24 @@ function injectStyles(): void {
     '.gh-tk-btn:hover{border-color:#58a6ff;color:#c9d1d9}',
     '.gh-tk-btn.gh-tk-active{border-color:#388bfd;color:#58a6ff;background:#0d1117}',
     '.gh-tk-sep{width:1px;height:18px;background:#30363d;margin:0 2px;flex-shrink:0}',
+    '.gh-tk-refresh{display:inline-flex;align-items:center;gap:4px;color:#6e7681;',
+    'font-size:12px;cursor:pointer;user-select:none}',
+    '.gh-tk-refresh input{accent-color:#388bfd;cursor:pointer;margin:0}',
   ].join('');
   document.head.appendChild(style);
 }
 
 /**
- * Creates and returns the filter bar element.
+ * Creates and returns the filter bar.
  * Does NOT insert it into the DOM — caller is responsible for placement.
+ * Pass initialActive to restore a previously saved filter state.
  */
 export function createFilterBar(
-  onFilter: (status: FilterState) => void,
+  onFilter: (active: FilterState, refresh: boolean) => void,
   onOpenSelected: () => void,
   onOpenAllVisible: () => void,
-): HTMLElement {
+  initialActive?: FilterState,
+): FilterBarResult {
   injectStyles();
 
   const bar = document.createElement('div');
@@ -92,20 +129,29 @@ export function createFilterBar(
   label.textContent = 'Filter';
   bar.appendChild(label);
 
-  let active: Exclude<NotificationStatus, 'unknown'> | null = null;
+  const active: FilterState = new Set(initialActive);
+
+  const emit = () => onFilter(new Set(active), refreshCb.checked);
 
   FILTERS.forEach((f) => {
     const btn = makeFilterButton(f);
     btn.addEventListener('click', () => {
-      if (active === f.value) {
-        active = null;
-        updateActive(bar, null);
-        onFilter('all');
-      } else {
-        active = f.value;
-        updateActive(bar, f.value);
-        onFilter(f.value);
-      }
+      if (active.has(f.value)) active.delete(f.value);
+      else active.add(f.value);
+      syncActive(bar, active);
+      emit();
+    });
+    bar.appendChild(btn);
+  });
+
+  COMBO_FILTERS.forEach((f) => {
+    const btn = makeComboButton(f);
+    btn.addEventListener('click', () => {
+      const allOn = f.values.every((v) => active.has(v));
+      if (allOn) f.values.forEach((v) => active.delete(v));
+      else f.values.forEach((v) => active.add(v));
+      syncActive(bar, active);
+      emit();
     });
     bar.appendChild(btn);
   });
@@ -115,12 +161,27 @@ export function createFilterBar(
   sep.setAttribute('aria-hidden', 'true');
   bar.appendChild(sep);
 
-  const openSelected = document.createElement('button');
-  openSelected.className = 'gh-tk-btn';
-  openSelected.type = 'button';
-  openSelected.textContent = 'Open Selected';
-  openSelected.addEventListener('click', onOpenSelected);
-  bar.appendChild(openSelected);
+  // Refresh checkbox
+  const refreshLabel = document.createElement('label');
+  refreshLabel.className = 'gh-tk-refresh';
+  const refreshCb = document.createElement('input');
+  refreshCb.type = 'checkbox';
+  refreshCb.id = 'gh-tk-refresh-cb';
+  refreshLabel.appendChild(refreshCb);
+  refreshLabel.appendChild(document.createTextNode('Refresh'));
+  bar.appendChild(refreshLabel);
+
+  const sep2 = document.createElement('div');
+  sep2.className = 'gh-tk-sep';
+  sep2.setAttribute('aria-hidden', 'true');
+  bar.appendChild(sep2);
+
+  const openSelectedBtn = document.createElement('button');
+  openSelectedBtn.className = 'gh-tk-btn';
+  openSelectedBtn.type = 'button';
+  openSelectedBtn.textContent = 'Open Selected';
+  openSelectedBtn.addEventListener('click', onOpenSelected);
+  bar.appendChild(openSelectedBtn);
 
   const openAll = document.createElement('button');
   openAll.className = 'gh-tk-btn';
@@ -129,11 +190,26 @@ export function createFilterBar(
   openAll.addEventListener('click', onOpenAllVisible);
   bar.appendChild(openAll);
 
-  return bar;
+  // Apply initial state visually (no callback fired — caller applies filter separately)
+  if (initialActive && initialActive.size > 0) {
+    syncActive(bar, active);
+  }
+
+  return {
+    element: bar,
+    updateSelectedCount(n: number) {
+      openSelectedBtn.textContent = n > 0 ? `Open Selected (${n})` : 'Open Selected';
+    },
+  };
 }
 
-function updateActive(bar: HTMLElement, active: string | null): void {
+function syncActive(bar: HTMLElement, active: FilterState): void {
   bar.querySelectorAll<HTMLButtonElement>('.gh-tk-filter').forEach((btn) => {
-    btn.classList.toggle('gh-tk-active', btn.dataset.filter === active);
+    btn.classList.toggle('gh-tk-active', active.has(btn.dataset.filter as FilterValue));
+  });
+
+  bar.querySelectorAll<HTMLButtonElement>('.gh-tk-combo').forEach((btn) => {
+    const values = (btn.dataset.comboFilter ?? '').split(',') as FilterValue[];
+    btn.classList.toggle('gh-tk-active', values.every((v) => active.has(v)));
   });
 }
