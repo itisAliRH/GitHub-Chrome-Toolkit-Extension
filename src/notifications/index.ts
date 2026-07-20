@@ -1,6 +1,7 @@
 import { classifyAll, classifyItem, ITEM_SELECTOR } from './classifier.js';
 import { createFilterBar } from './filter-bar.js';
 import { openSelected, openAllVisible } from './tabs.js';
+import { mountInHeader } from './header-mount.js';
 import type { FilterState, FilterValue } from './filter-bar.js';
 import { waitForElement, onSPANavigate } from '../shared/dom-utils.js';
 
@@ -14,10 +15,13 @@ const STORAGE_KEY = 'gh-toolkit-active-filters';
 
 let listRoot: Element | null = null;
 let observer: MutationObserver | null = null;
+let unmountBar: (() => void) | null = null;
 
 async function init(): Promise<void> {
   observer?.disconnect();
   observer = null;
+  unmountBar?.();
+  unmountBar = null;
   document.getElementById('gh-toolkit-filter-bar')?.remove();
 
   listRoot = await waitForElement(LIST_SELECTOR);
@@ -46,8 +50,7 @@ async function init(): Promise<void> {
     }
   });
 
-  const container = listRoot.closest('#js-pjax-container, main') ?? document.body;
-  container.insertBefore(bar, container.firstElementChild);
+  unmountBar = mountInHeader(bar, listRoot);
 
   // Apply restored filter without triggering another reload
   if (initialActive && initialActive.size > 0) {

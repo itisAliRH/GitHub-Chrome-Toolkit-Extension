@@ -88,14 +88,14 @@ function injectStyles(): void {
   const style = document.createElement('style');
   style.id = 'gh-toolkit-styles';
   style.textContent = [
-    '#gh-toolkit-filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;',
-    'padding:7px 16px;background:#0d1117;border-bottom:1px solid #21262d;',
+    '#gh-toolkit-filter-bar{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;',
+    'margin-left:auto;',
     'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
     '.gh-tk-label{color:#6e7681;font-size:11px;font-weight:600;text-transform:uppercase;',
     'letter-spacing:.05em;margin-right:2px}',
     '.gh-tk-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid #30363d;',
-    'border-radius:999px;padding:3px 10px;background:#161b22;color:#8b949e;',
-    'font-size:12px;cursor:pointer;transition:border-color .15s,color .15s}',
+    'border-radius:999px;padding:2px 9px;background:#161b22;color:#8b949e;',
+    'font-size:12px;line-height:20px;cursor:pointer;transition:border-color .15s,color .15s}',
     '.gh-tk-btn:hover{border-color:#58a6ff;color:#c9d1d9}',
     '.gh-tk-btn.gh-tk-active{border-color:#388bfd;color:#58a6ff;background:#0d1117}',
     '.gh-tk-sep{width:1px;height:18px;background:#30363d;margin:0 2px;flex-shrink:0}',
