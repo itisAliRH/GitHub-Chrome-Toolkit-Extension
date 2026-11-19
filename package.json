@@ -14,11 +14,11 @@
   "license": "MIT",
   "description": "Filter notifications, open in tabs, and delete branches — right from the page.",
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.2",
+    "@vitest/coverage-v8": "^4.1.12",
     "chrome-types": "^0.1.425",
     "jsdom": "^29.0.1",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.2",
+    "vitest": "^4.1.12",
     "esbuild": "^0.28.1"
   }
 }
